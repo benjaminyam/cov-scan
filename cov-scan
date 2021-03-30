@@ -58,6 +58,7 @@ if [ -z "$capture_cmd" ]; then
 	elif [ $(find . -type f \( -name "*.html" -or -name "*.js" -or -name "*.rb" -or -name "*.py" -or -name "*.ts" -or -name "*.php" \) | wc -l) -gt 0 ]; then
 		capture_cmd="--source-dir ."
 	fi
+fi
 
 if [ -n "$capture_cmd" ]; then	
         echo cov-capture --dir idir $capture_cmd

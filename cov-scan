@@ -1,27 +1,54 @@
+cov_build_cmd="cov-build --dir idir"
+build_cmd=""
+capture_cmd=""
 analysis_flags="--all"
+#analysis_flags="--disable-default" #Security focused
+security=1
+audit_checkers=0
 
+# Prepare Commands
 if [ $(ls | grep pom.xml | wc -l) -gt 0 ]; then
-	cov-build --dir idir mvn clean compile -DskipTests -Dmaven.test.skip=true
-	analysis_flags+=" --webapp-security" 
+	build_cmd="mvn clean compile -DskipTests -Dmaven.test.skip=true"
+	echo $cov_build_cmd $build_cmd
+	$cov_build_cmd $build_cmd
 fi
 if [ $(ls | grep go.mod | wc -l) -gt 0 ]; then
 	go clean
-	cov-build --dir idir go build
+	build_cmd="go build"
+	echo $cov_build_cmd $build_cmd
+        $cov_build_cmd $build_cmd
+
+	$cov_build_cmd $build_cmd
 fi
 if [ $(ls | grep .sln | wc -l) -gt 0 ]; then
 	dotnet clean
-	cov-build --dir idir dotnet build
-	analysis_flags+=" --webapp-security"
+	build_cmd="dotnet build"
+	echo $cov_build_cmd $build_cmd
+        $cov_build_cmd $build_cmd
 fi
 if [ $(ls | grep gradle.properties | wc -l) -gt 0 ]; then
-	cov-build --dir idir gradle clean compile
-	analysis_flags+=" --android-security"
-
+	build_cmd="gradle clean compile"
+	echo $cov_build_cmd $build_cmd
+        $cov_build_cmd $build_cmd
 fi
 if [ $(ls | grep package.json | wc -l) -gt 0 ]; then
 	npm install
-	cov-capture --dir idir --project-dir . --language javascript
-
-	analysis_flags+=" --webapp-security"
+	capture_cmd="--project-dir ."
+elif [ $(find . -type f \( -name "*.html" -or -name "*.js" -or -name "*.rb" -or -name "*.py" -or -name "*.ts" -or -name "*.php" \) | wc -l) -gt 0 ]; then
+        capture_cmd="--source-dir ."
 fi
-cov-capture --dir idir --source-dir .
+
+if [ -n "$capture_cmd" ]; then	
+        echo cov-capture --dir idir $capture_cmd
+	cov-capture --dir idir $capture_cmd
+fi
+
+if [ $audit_checkers -eq 1 ]; then
+        analysis_flags+=" --enable-audit-checkers"
+fi
+
+if [ $security -eq 1 ]; then
+	analysis_flags+=" --webapp-security" 
+fi
+
+cov-analyze --dir idir --strip-path $(pwd) $analysis_flags

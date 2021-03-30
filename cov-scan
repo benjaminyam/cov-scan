@@ -1,7 +1,7 @@
-quality=1
-security=1
-distrust_all=0
-audit_checkers=0
+quality=${quality-1}
+security=${security-1}
+distrust_all=${distrust_all-0}
+audit_checkers=${audit_checkers-0}
 
 cov_build_cmd="cov-build --dir idir"
 build_cmd=""

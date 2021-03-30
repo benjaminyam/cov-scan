@@ -8,7 +8,7 @@ audit_checkers=0
 
 # Build Command
 if [ $(ls | grep pom.xml | wc -l) -gt 0 ]; then
-	build_cmd="mvn clean compile -DskipTests -Dmaven.test.skip=true"
+	build_cmd="mvn -T $(cat /proc/cpuinfo|grep processor|wc -l) clean compile -DskipTests -Dmaven.test.skip=true"
 	echo $cov_build_cmd $build_cmd
 	$cov_build_cmd $build_cmd
 fi

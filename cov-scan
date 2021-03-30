@@ -20,6 +20,7 @@ if [ $(ls | grep pom.xml | wc -l) -gt 0 ]; then
 	$cov_build_cmd $build_cmd
 fi
 if [ $(ls | grep go.mod | wc -l) -gt 0 ]; then
+	echo go clean
 	go clean
 	build_cmd="go build"
 	echo $cov_build_cmd $build_cmd
@@ -28,6 +29,7 @@ if [ $(ls | grep go.mod | wc -l) -gt 0 ]; then
 	$cov_build_cmd $build_cmd
 fi
 if [ $(ls | grep .sln | wc -l) -gt 0 ]; then
+	echo dotnet clean
 	dotnet clean
 	build_cmd="dotnet build"
 	echo $cov_build_cmd $build_cmd
@@ -42,7 +44,6 @@ fi
 
 # Capture Command
 if [ $(ls | grep package.json | wc -l) -gt 0 ]; then
-	npm install
 	capture_cmd="--project-dir ."
 elif [ $(find . -type f \( -name "*.html" -or -name "*.js" -or -name "*.rb" -or -name "*.py" -or -name "*.ts" -or -name "*.php" \) | wc -l) -gt 0 ]; then
         capture_cmd="--source-dir ."

@@ -15,9 +15,13 @@ fi
 
 # Build Command
 if [ $(ls | grep pom.xml | wc -l) -gt 0 ]; then
-	build_cmd="mvn -T $($cpu_cmd) clean compile -DskipTests -Dmaven.test.skip=true"
-	echo $cov_build_cmd $build_cmd
-	$cov_build_cmd $build_cmd
+	if [ mvn -version | wc -1) -gt 0 ]; then
+		build_cmd="mvn -T $($cpu_cmd) clean compile -DskipTests -Dmaven.test.skip=true"
+		echo $cov_build_cmd $build_cmd
+		$cov_build_cmd $build_cmd
+	else
+		capture_cmd="--project-dir ."
+	fi
 fi
 if [ $(ls | grep go.mod | wc -l) -gt 0 ]; then
 	echo go clean
@@ -36,18 +40,23 @@ if [ $(ls | grep .sln | wc -l) -gt 0 ]; then
         $cov_build_cmd $build_cmd
 fi
 if [ $(ls | grep gradle.properties | wc -l) -gt 0 ]; then
-	build_cmd="gradle clean build"
-	echo $cov_build_cmd $build_cmd
-	gradle stop
-        $cov_build_cmd $build_cmd
+	if [ gradle -version | wc -1) -gt 0 ]; then
+		build_cmd="gradle clean build"
+		echo $cov_build_cmd $build_cmd
+		gradle stop
+		$cov_build_cmd $build_cmd
+	else
+		capture_cmd="--project-dir ."
+	fi
 fi
 
 # Capture Command
-if [ $(ls | grep package.json | wc -l) -gt 0 ]; then
-	capture_cmd="--project-dir ."
-elif [ $(find . -type f \( -name "*.html" -or -name "*.js" -or -name "*.rb" -or -name "*.py" -or -name "*.ts" -or -name "*.php" \) | wc -l) -gt 0 ]; then
-        capture_cmd="--source-dir ."
-fi
+if [ -z "$capture_cmd" ]; then
+	if [ $(ls | grep package.json | wc -l) -gt 0 ]; then
+		capture_cmd="--project-dir ."
+	elif [ $(find . -type f \( -name "*.html" -or -name "*.js" -or -name "*.rb" -or -name "*.py" -or -name "*.ts" -or -name "*.php" \) | wc -l) -gt 0 ]; then
+		capture_cmd="--source-dir ."
+	fi
 
 if [ -n "$capture_cmd" ]; then	
         echo cov-capture --dir idir $capture_cmd

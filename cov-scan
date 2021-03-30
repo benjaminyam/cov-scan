@@ -6,7 +6,7 @@ analysis_flags="--all"
 security=1
 audit_checkers=0
 
-# Prepare Commands
+# Build Command
 if [ $(ls | grep pom.xml | wc -l) -gt 0 ]; then
 	build_cmd="mvn clean compile -DskipTests -Dmaven.test.skip=true"
 	echo $cov_build_cmd $build_cmd
@@ -31,6 +31,8 @@ if [ $(ls | grep gradle.properties | wc -l) -gt 0 ]; then
 	echo $cov_build_cmd $build_cmd
         $cov_build_cmd $build_cmd
 fi
+
+# Capture Command
 if [ $(ls | grep package.json | wc -l) -gt 0 ]; then
 	npm install
 	capture_cmd="--project-dir ."
@@ -43,6 +45,7 @@ if [ -n "$capture_cmd" ]; then
 	cov-capture --dir idir $capture_cmd
 fi
 
+# Analysis Command
 if [ $audit_checkers -eq 1 ]; then
         analysis_flags+=" --enable-audit-checkers"
 fi

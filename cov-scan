@@ -18,7 +18,7 @@ fi
 
 # Build Command
 if [ $(ls | grep pom.xml | wc -l) -gt 0 ]; then
-	if [ mvn -version | wc -1) -gt 0 ]; then
+	if [ $(mvn -version | wc -1) -gt 0 ]; then
 		build_cmd="mvn -T $($cpu_cmd) clean compile -DskipTests -Dmaven.test.skip=true"
 		echo $cov_build_cmd $build_cmd
 		$cov_build_cmd $build_cmd
@@ -41,7 +41,7 @@ if [ $(ls | grep .sln | wc -l) -gt 0 ]; then
         $cov_build_cmd $build_cmd
 fi
 if [ $(ls | grep gradle.properties | wc -l) -gt 0 ]; then
-	if [ gradle -version | wc -1) -gt 0 ]; then
+	if [ $(gradle -version | wc -1) -gt 0 ]; then
 		build_cmd="gradle clean build"
 		echo $cov_build_cmd $build_cmd
 		gradle stop

@@ -5,10 +5,17 @@ analysis_flags="--all"
 #analysis_flags="--disable-default" #Security focused
 security=1
 audit_checkers=0
+#cpu_cmd="cat /proc/cpuinfo | grep processor | wc -l"
+cpu_cmd="nproc"
+
+if [[ "$OSTYPE" == "darwin"* ]]; then
+        cpu_cmd="sysctl -n machdep.cpu.thread_count"
+fi
+
 
 # Build Command
 if [ $(ls | grep pom.xml | wc -l) -gt 0 ]; then
-	build_cmd="mvn -T $(cat /proc/cpuinfo|grep processor|wc -l) clean compile -DskipTests -Dmaven.test.skip=true"
+	build_cmd="mvn -T $($cpu_cmd) clean compile -DskipTests -Dmaven.test.skip=true"
 	echo $cov_build_cmd $build_cmd
 	$cov_build_cmd $build_cmd
 fi
@@ -27,8 +34,9 @@ if [ $(ls | grep .sln | wc -l) -gt 0 ]; then
         $cov_build_cmd $build_cmd
 fi
 if [ $(ls | grep gradle.properties | wc -l) -gt 0 ]; then
-	build_cmd="gradle clean compile"
+	build_cmd="gradle clean build"
 	echo $cov_build_cmd $build_cmd
+	gradle stop
         $cov_build_cmd $build_cmd
 fi
 

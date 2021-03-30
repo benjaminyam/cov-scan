@@ -1,10 +1,13 @@
+quality=1
+security=1
+distrust_all=0
+audit_checkers=0
+
 cov_build_cmd="cov-build --dir idir"
 build_cmd=""
 capture_cmd=""
-analysis_flags="--all"
-#analysis_flags="--disable-default" #Security focused
-security=1
-audit_checkers=0
+analysis_flags=""
+
 #cpu_cmd="cat /proc/cpuinfo | grep processor | wc -l"
 cpu_cmd="nproc"
 
@@ -20,7 +23,7 @@ if [ $(ls | grep pom.xml | wc -l) -gt 0 ]; then
 		echo $cov_build_cmd $build_cmd
 		$cov_build_cmd $build_cmd
 	else
-		capture_cmd="--project-dir ."
+		capture_cmd="--source-dir ."
 	fi
 fi
 if [ $(ls | grep go.mod | wc -l) -gt 0 ]; then
@@ -46,7 +49,7 @@ if [ $(ls | grep gradle.properties | wc -l) -gt 0 ]; then
 		gradle stop
 		$cov_build_cmd $build_cmd
 	else
-		capture_cmd="--project-dir ."
+		capture_cmd="--source-dir ."
 	fi
 fi
 
@@ -68,8 +71,20 @@ if [ $audit_checkers -eq 1 ]; then
         analysis_flags+=" --enable-audit-checkers"
 fi
 
-if [ $security -eq 1 ]; then
-	analysis_flags+=" --webapp-security" 
+if [$quality -eq 1 ]; then
+	analysis_flags+=" --all"
 fi
 
+if [ $security -eq 1 ]; then
+	analysis_flags+=" --webapp-security" 	
+	if [ $quality -eq 0 ]; then
+		analysis_flags+=" --disable-default"
+	fi
+fi
+
+if [$distrust_all -eq 1 ]; then
+	analysis_flags+=" --distrust-all"
+fi
+
+echo cov-analyze --dir idir --strip-path $(pwd) $analysis_flags
 cov-analyze --dir idir --strip-path $(pwd) $analysis_flags

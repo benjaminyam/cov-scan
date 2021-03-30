@@ -71,7 +71,7 @@ if [ $audit_checkers -eq 1 ]; then
         analysis_flags+=" --enable-audit-checkers"
 fi
 
-if [$quality -eq 1 ]; then
+if [ $quality -eq 1 ]; then
 	analysis_flags+=" --all"
 fi
 
@@ -82,7 +82,7 @@ if [ $security -eq 1 ]; then
 	fi
 fi
 
-if [$distrust_all -eq 1 ]; then
+if [ $distrust_all -eq 1 ]; then
 	analysis_flags+=" --distrust-all"
 fi
 

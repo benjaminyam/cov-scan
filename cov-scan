@@ -20,9 +20,10 @@ fi
 if [ $(ls | grep pom.xml | wc -l) -gt 0 ]; then
 	if [ $(mvn -version | wc -l) -gt 0 ]; then
 		build_cmd="mvn -T $($cpu_cmd) clean compile -DskipTests -Dmaven.test.skip=true"
-		echo $cov_build_cmd $build_cmd
+		echo COV_SCAN: [BUILD] $cov_build_cmd $build_cmd
 		$cov_build_cmd $build_cmd
 	else
+		echo COV_SCAN: [WARNING] MAVEN NOT INSTALLED, FALLING BACK TO SOURCE CAPTURE
 		capture_cmd="--source-dir ."
 	fi
 fi
@@ -30,21 +31,21 @@ if [ $(ls | grep go.mod | wc -l) -gt 0 ]; then
 	echo go clean
 	go clean
 	build_cmd="go build"
-	echo $cov_build_cmd $build_cmd
+	echo COV_SCAN: [BUILD] $cov_build_cmd $build_cmd
         $cov_build_cmd $build_cmd
 fi
 if [ $(ls | grep .sln | wc -l) -gt 0 ]; then
 	echo dotnet clean
 	dotnet clean
 	build_cmd="dotnet build"
-	echo $cov_build_cmd $build_cmd
+	echo COV_SCAN: [BUILD] $cov_build_cmd $build_cmd
         $cov_build_cmd $build_cmd
 fi
 if [ $(ls | grep gradle.properties | wc -l) -gt 0 ]; then
 	if [ $(gradle -version | wc -l) -gt 0 ]; then
 		build_cmd="gradle clean build"
-		echo $cov_build_cmd $build_cmd
 		gradle stop
+		echo COV_SCAN: [BUILD] $cov_build_cmd $build_cmd
 		$cov_build_cmd $build_cmd
 	else
 		capture_cmd="--source-dir ."
@@ -61,7 +62,7 @@ if [ -z "$capture_cmd" ]; then
 fi
 
 if [ -n "$capture_cmd" ]; then	
-        echo cov-capture --dir idir $capture_cmd
+        echo COV_SCAN: [CAPTURE] cov-capture --dir idir $capture_cmd
 	cov-capture --dir idir $capture_cmd
 fi
 
@@ -85,5 +86,5 @@ if [$distrust_all -eq 1 ]; then
 	analysis_flags+=" --distrust-all"
 fi
 
-echo cov-analyze --dir idir --strip-path $(pwd) $analysis_flags
+echo COV_SCAN: [ANALYZE] cov-analyze --dir idir --strip-path $(pwd) $analysis_flags
 cov-analyze --dir idir --strip-path $(pwd) $analysis_flags

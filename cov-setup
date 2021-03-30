@@ -1,0 +1,16 @@
+cov-configure --java
+cov-configure --javascript
+cov-configure --python 
+cov-configure --cs    
+cov-configure --clang
+cov-configure --gcc
+cov-configure --msvc
+cov-configure --ruby
+cov-configure --scala
+cov-configure --vb
+cov-configure --php
+cov-configure --go
+cov-configure --kotlin
+cov-configure --swift
+cov-configure --template --compiler swiftc --comptype swiftc
+cov-configure --cuda

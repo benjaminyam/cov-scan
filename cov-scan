@@ -1,0 +1,27 @@
+analysis_flags="--all"
+
+if [ $(ls | grep pom.xml | wc -l) -gt 0 ]; then
+	cov-build --dir idir mvn clean compile -DskipTests -Dmaven.test.skip=true
+	analysis_flags+=" --webapp-security" 
+fi
+if [ $(ls | grep go.mod | wc -l) -gt 0 ]; then
+	go clean
+	cov-build --dir idir go build
+fi
+if [ $(ls | grep .sln | wc -l) -gt 0 ]; then
+	dotnet clean
+	cov-build --dir idir dotnet build
+	analysis_flags+=" --webapp-security"
+fi
+if [ $(ls | grep gradle.properties | wc -l) -gt 0 ]; then
+	cov-build --dir idir gradle clean compile
+	analysis_flags+=" --android-security"
+
+fi
+if [ $(ls | grep package.json | wc -l) -gt 0 ]; then
+	npm install
+	cov-capture --dir idir --project-dir . --language javascript
+
+	analysis_flags+=" --webapp-security"
+fi
+cov-capture --dir idir --source-dir .

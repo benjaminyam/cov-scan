@@ -35,11 +35,16 @@ if [ $(ls | grep go.mod | wc -l) -gt 0 ]; then
         $cov_build_cmd $build_cmd
 fi
 if [ $(ls | grep .sln | wc -l) -gt 0 ]; then
-	echo dotnet clean
-	dotnet clean
-	build_cmd="dotnet build"
-	echo COV_SCAN: [BUILD] $cov_build_cmd $build_cmd
-        $cov_build_cmd $build_cmd
+	if [ $(dotnet -version | wc -l) -gt 0 ]; then
+		echo dotnet clean
+		dotnet clean
+		build_cmd="dotnet build"
+		echo COV_SCAN: [BUILD] $cov_build_cmd $build_cmd
+		$cov_build_cmd $build_cmd
+	else
+		echo COV_SCAN: [WARNING] DOTNET NOT INSTALLED, STOPPING CAPTURE
+		exit(-1)
+	fi
 fi
 if [ $(ls | grep gradle.properties | wc -l) -gt 0 ]; then
 	if [ $(gradle -version | wc -l) -gt 0 ]; then

@@ -130,4 +130,9 @@ fi
 echo COV_SCAN: [ANALYZE] cov-analyze --dir idir --strip-path $(pwd) $COV_ANALYZE_FLAGS
 cov-analyze --dir idir --strip-path $(pwd) $COV_ANALYZE_FLAGS
 
+if [ $(cov-manage-im --url $COV_URL --mode streams --name $COV_STREAM --show -no-headers | wc -l) -eq 0 ]; then
+	cov-manage-im --url $COV_URL --on-new-cert trust --mode streams  --add --set name:$COV_STREAM
+	cov-manage-im --url $COV_URL --on-new-cert trust --mode projects --add --set name:$COV_PROJECT || true
+    cov-manage-im --url $COV_URL --on-new-cert trust --mode projects --name $COV_PROJECT --update --insert stream:$COV_STREAM
+fi
 cov-commit-defects --dir idir --url $COV_URL --on-new-cert trust --stream $COV_STREAM

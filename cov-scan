@@ -7,6 +7,8 @@ cov_build_cmd="cov-build --dir idir"
 build_cmd=${build_cmd-""}
 capture_cmd=${capture_cmd-""}
 analysis_flags=${analysis_flags-""}
+COV_PROJECT=${COV_PROJECT-$(basename `git rev-parse --show-toplevel`)}
+COV_STREAM=${COV_STREAM-$COV_PROJECT-$(git rev-parse --abbrev-ref HEAD)}
 
 #cpu_cmd="cat /proc/cpuinfo | grep processor | wc -l"
 cpu_cmd="nproc"
@@ -126,3 +128,5 @@ fi
 
 echo COV_SCAN: [ANALYZE] cov-analyze --dir idir --strip-path $(pwd) $analysis_flags
 cov-analyze --dir idir --strip-path $(pwd) $analysis_flags
+
+cov-commit-defects --dir idir --url $COV_URL --stream $(git

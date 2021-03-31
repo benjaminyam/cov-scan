@@ -1,10 +1,13 @@
+# VARIABLES TO OVERRIDE
+COV_BUILD_BUILD_CMD=${COV_BUILD_BUILD_CMD-""}
+COV_CAPTURE_FLAGS=${COV_CAPTURE_FLAGS-""}
+
 COV_ANALYZE_QUALITY=${COV_ANALYZE_QUALITY-1}
 COV_ANALYZE_SECURITY=${COV_ANALYZE_SECURITY-1}
 COV_ANALYZE_DISTRUST_ALL=${COV_ANALYZE_DISTRUST_ALL-0}
 COV_ANALYZE_AUDIT_CHECKERS=${COV_ANALYZE_AUDIT_CHECKERS-0}
-COV_BUILD_BUILD_CMD=${COV_BUILD_BUILD_CMD-""}
-COV_CAPTURE_FLAGS=${COV_CAPTURE_FLAGS-""}
 COV_ANALYZE_FLAGS=${COV_ANALYZE_FLAGS-""}
+
 COV_PROJECT=${COV_PROJECT-$(basename `git rev-parse --show-toplevel`)}
 COV_STREAM=${COV_STREAM-$COV_PROJECT-$(git rev-parse --abbrev-ref HEAD)}
 
@@ -16,7 +19,6 @@ cpu_cmd="nproc"
 if [[ "$OSTYPE" == "darwin"* ]]; then
     cpu_cmd="sysctl -n machdep.cpu.thread_count"
 fi
-
 
 # Build Command
 if [ -z $COV_BUILD_BUILD_CMD ]; then
@@ -128,6 +130,8 @@ fi
 
 echo COV_SCAN: [ANALYZE] cov-analyze --dir idir --strip-path $(pwd) $COV_ANALYZE_FLAGS
 cov-analyze --dir idir --strip-path $(pwd) $COV_ANALYZE_FLAGS
+
+# Commit Defects
 
 if [ $(cov-manage-im --url $COV_URL --mode streams --name $COV_STREAM --show -no-headers | wc -l) -eq 0 ]; then
 	cov-manage-im --url $COV_URL --on-new-cert trust --mode streams  --add --set name:$COV_STREAM

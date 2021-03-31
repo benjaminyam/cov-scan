@@ -98,13 +98,13 @@ if [ -z "$COV_CAPTURE_FLAGS" ]; then
 		COV_CAPTURE_FLAGS="--project-dir ."
 	elif [ $(find . -type f \( -name "*.html" -or -name "*.htm" -or -name "*.js" -or -name "*.rb" -or -name "*.py" -or -name "*.ts" -or -name "*.php" \) | wc -l) -gt 0 ]; then
 		COV_CAPTURE_FLAGS="--source-dir ."
+	else
+		COV_CAPTURE_FLAGS="--config-dir ."
 	fi
 fi
 
-if [ -n "$COV_CAPTURE_FLAGS" ]; then	
-        echo COV_SCAN: [CAPTURE] cov-capture --dir idir $COV_CAPTURE_FLAGS
-	cov-capture --dir idir $COV_CAPTURE_FLAGS
-fi
+echo COV_SCAN: [CAPTURE] cov-capture --dir idir $COV_CAPTURE_FLAGS
+cov-capture --dir idir $COV_CAPTURE_FLAGS
 
 # Analysis Command
 if [ $COV_ANALYZE_AUDIT_CHECKERS -eq 1 ]; then

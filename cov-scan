@@ -4,9 +4,9 @@ distrust_all=${distrust_all-0}
 audit_checkers=${audit_checkers-0}
 
 cov_build_cmd="cov-build --dir idir"
-build_cmd=""
-capture_cmd=""
-analysis_flags=""
+build_cmd=${build_cmd-""}
+capture_cmd=${capture_cmd-""}
+analysis_flags=${analysis_flags-""}
 
 #cpu_cmd="cat /proc/cpuinfo | grep processor | wc -l"
 cpu_cmd="nproc"
@@ -17,49 +17,82 @@ fi
 
 
 # Build Command
-if [ $(ls | grep pom.xml | wc -l) -gt 0 ]; then
-	if [ $(mvn -version | wc -l) -gt 0 ]; then
-		build_cmd="mvn -T $($cpu_cmd) clean compile -DskipTests -Dmaven.test.skip=true"
-		echo COV_SCAN: [BUILD] $cov_build_cmd $build_cmd
-		$cov_build_cmd $build_cmd
-	else
-		echo COV_SCAN: [WARNING] MAVEN NOT INSTALLED, FALLING BACK TO SOURCE CAPTURE
-		capture_cmd="--source-dir ."
+if [ -z $build_cmd ]; then
+	if [ $(ls | grep pom.xml | wc -l) -gt 0 ]; then
+		mvn -version &>/dev/null && {
+			build_cmd="mvn -T $($cpu_cmd) clean compile -DskipTests -Dmaven.test.skip=true"
+			echo COV_SCAN: [BUILD] $cov_build_cmd $build_cmd
+
+			$cov_build_cmd $build_cmd || 
+			{
+				echo COV_SCAN: [ERROR] MAVEN PROJECT DID NOT BUILD PROPERLY, CHECK BUILD COMPLETES SUCCESSFULLY
+				exit 1
+			}
+		} || {
+			echo COV_SCAN: [WARNING] MAVEN NOT INSTALLED, FALLING BACK TO SOURCE CAPTURE
+			capture_cmd="--source-dir ."
+		}
 	fi
-fi
-if [ $(ls | grep go.mod | wc -l) -gt 0 ]; then
-	echo go clean
-	go clean
-	build_cmd="go build"
-	echo COV_SCAN: [BUILD] $cov_build_cmd $build_cmd
-        $cov_build_cmd $build_cmd
-fi
-if [ $(ls | grep .sln | wc -l) -gt 0 ]; then
-	if [ $(dotnet -version | wc -l) -gt 0 ]; then
-		echo dotnet clean
-		dotnet clean
-		build_cmd="dotnet build"
-		echo COV_SCAN: [BUILD] $cov_build_cmd $build_cmd
-		$cov_build_cmd $build_cmd
-	else
-		echo COV_SCAN: [WARNING] DOTNET NOT INSTALLED, STOPPING CAPTURE
+	if [ $(ls | grep go.mod | wc -l) -gt 0 ]; then
+		go version &>/dev/null && {
+			echo COV_SCAN: [CLEAN] go clean
+			go clean
+			build_cmd="go build"
+			echo COV_SCAN: [BUILD] $cov_build_cmd $build_cmd
+			$cov_build_cmd $build_cmd || 
+			{
+				echo COV_SCAN: [ERROR] GRADLE PROJECT DID NOT BUILD PROPERLY, CHECK BUILD COMPLETES SUCCESSFULLY
+				exit 1
+			}
+		} || {
+			echo COV_SCAN: [ERROR] GRADLE PROJECT DETECTED BUT GRADLE NOT INSTALLED, STOPPING CAPTURE
+			exit 1
+		}
+
+	fi
+	if [ $(ls | grep .sln | wc -l) -gt 0 ]; then
+		dotnet --info &>/dev/null && { 
+			echo COV_SCAN: [CLEAN] dotnet clean
+			dotnet clean
+			build_cmd="dotnet build"
+			echo COV_SCAN: [BUILD] $cov_build_cmd $build_cmd
+
+			$cov_build_cmd $build_cmd || {
+				echo COV_SCAN: [ERROR] DOTNET PROJECT DID NOT BUILD PROPERLY, CHECK BUILD COMPLETES SUCCESSFULLY
+				exit 1
+			}
+		} || {
+			echo COV_SCAN: [ERROR] DOTNET PROJECT DETECTED BUT DOTNOT NOT INSTALLED, STOPPING CAPTURE
+			exit 1
+		}
+	fi
+	if [ $(ls | grep gradle.properties | wc -l) -gt 0 ]; then
+		./gradlew -version && {
+			build_cmd="./gradlew clean build"
+			./gradlew stop
+			echo COV_SCAN: [BUILD] $cov_build_cmd $build_cmd
+
+			$cov_build_cmd $build_cmd || 
+			{
+				echo COV_SCAN: [ERROR] GRADLE PROJECT DID NOT BUILD PROPERLY, CHECK BUILD COMPLETES SUCCESSFULLY
+				exit 1
+			}
+		} || {
+			echo COV_SCAN: [ERROR] GRADLE PROJECT DETECTED BUT GRADLE NOT INSTALLED, STOPPING CAPTURE
+			exit 1
+		}
+	fi
+else
+	$cov_build_cmd $build_cmd || 
+	{
+		echo COV_SCAN: [ERROR] PROJECT DID NOT BUILD PROPERLY, CHECK BUILD COMPLETES SUCCESSFULLY
 		exit 1
-	fi
-fi
-if [ $(ls | grep gradle.properties | wc -l) -gt 0 ]; then
-	if [ $(gradle -version | wc -l) -gt 0 ]; then
-		build_cmd="gradle clean build"
-		gradle stop
-		echo COV_SCAN: [BUILD] $cov_build_cmd $build_cmd
-		$cov_build_cmd $build_cmd
-	else
-		capture_cmd="--source-dir ."
-	fi
+	}
 fi
 
 # Capture Command
 if [ -z "$capture_cmd" ]; then
-	if [ $(ls | grep package.json | wc -l) -gt 0 ]; then
+	if [ $(ls package.json | wc -l) -gt 0 ]; then
 		capture_cmd="--project-dir ."
 	elif [ $(find . -type f \( -name "*.html" -or -name "*.js" -or -name "*.rb" -or -name "*.py" -or -name "*.ts" -or -name "*.php" \) | wc -l) -gt 0 ]; then
 		capture_cmd="--source-dir ."

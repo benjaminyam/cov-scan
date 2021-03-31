@@ -1,47 +1,48 @@
-quality=${quality-1}
-security=${security-1}
-distrust_all=${distrust_all-0}
-audit_checkers=${audit_checkers-0}
-
-cov_build_cmd="cov-build --dir idir"
-build_cmd=${build_cmd-""}
-capture_cmd=${capture_cmd-""}
-analysis_flags=${analysis_flags-""}
+COV_ANALYZE_QUALITY=${COV_ANALYZE_QUALITY-1}
+COV_ANALYZE_SECURITY=${COV_ANALYZE_SECURITY-1}
+COV_ANALYZE_DISTRUST_ALL=${COV_ANALYZE_DISTRUST_ALL-0}
+COV_ANALYZE_AUDIT_CHECKERS=${COV_ANALYZE_AUDIT_CHECKERS-0}
+COV_BUILD_BUILD_CMD=${COV_BUILD_BUILD_CMD-""}
+COV_CAPTURE_FLAGS=${COV_CAPTURE_FLAGS-""}
+COV_ANALYZE_FLAGS=${COV_ANALYZE_FLAGS-""}
 COV_PROJECT=${COV_PROJECT-$(basename `git rev-parse --show-toplevel`)}
 COV_STREAM=${COV_STREAM-$COV_PROJECT-$(git rev-parse --abbrev-ref HEAD)}
+
+cov_build_cmd="cov-build --dir idir"
+
 
 #cpu_cmd="cat /proc/cpuinfo | grep processor | wc -l"
 cpu_cmd="nproc"
 
 if [[ "$OSTYPE" == "darwin"* ]]; then
-        cpu_cmd="sysctl -n machdep.cpu.thread_count"
+    cpu_cmd="sysctl -n machdep.cpu.thread_count"
 fi
 
 
 # Build Command
-if [ -z $build_cmd ]; then
+if [ -z $COV_BUILD_BUILD_CMD ]; then
 	if [ $(ls | grep pom.xml | wc -l) -gt 0 ]; then
 		mvn -version &>/dev/null && {
-			build_cmd="mvn -T $($cpu_cmd) clean compile -DskipTests -Dmaven.test.skip=true"
-			echo COV_SCAN: [BUILD] $cov_build_cmd $build_cmd
+			COV_BUILD_BUILD_CMD="mvn -T $($cpu_cmd) clean compile -DskipTests -Dmaven.test.skip=true"
+			echo COV_SCAN: [BUILD] $cov_build_cmd $COV_BUILD_BUILD_CMD
 
-			$cov_build_cmd $build_cmd || 
+			$cov_build_cmd $COV_BUILD_BUILD_CMD || 
 			{
 				echo COV_SCAN: [ERROR] MAVEN PROJECT DID NOT BUILD PROPERLY, CHECK BUILD COMPLETES SUCCESSFULLY
 				exit 1
 			}
 		} || {
 			echo COV_SCAN: [WARNING] MAVEN NOT INSTALLED, FALLING BACK TO SOURCE CAPTURE
-			capture_cmd="--source-dir ."
+			COV_CAPTURE_FLAGS="--source-dir ."
 		}
 	fi
 	if [ $(ls | grep go.mod | wc -l) -gt 0 ]; then
 		go version &>/dev/null && {
 			echo COV_SCAN: [CLEAN] go clean
 			go clean
-			build_cmd="go build"
-			echo COV_SCAN: [BUILD] $cov_build_cmd $build_cmd
-			$cov_build_cmd $build_cmd || 
+			COV_BUILD_BUILD_CMD="go build"
+			echo COV_SCAN: [BUILD] $cov_build_cmd $COV_BUILD_BUILD_CMD
+			$cov_build_cmd $COV_BUILD_BUILD_CMD || 
 			{
 				echo COV_SCAN: [ERROR] GRADLE PROJECT DID NOT BUILD PROPERLY, CHECK BUILD COMPLETES SUCCESSFULLY
 				exit 1
@@ -56,10 +57,10 @@ if [ -z $build_cmd ]; then
 		dotnet --info &>/dev/null && { 
 			echo COV_SCAN: [CLEAN] dotnet clean
 			dotnet clean
-			build_cmd="dotnet build"
-			echo COV_SCAN: [BUILD] $cov_build_cmd $build_cmd
+			COV_BUILD_BUILD_CMD="dotnet build"
+			echo COV_SCAN: [BUILD] $cov_build_cmd $COV_BUILD_BUILD_CMD
 
-			$cov_build_cmd $build_cmd || {
+			$cov_build_cmd $COV_BUILD_BUILD_CMD || {
 				echo COV_SCAN: [ERROR] DOTNET PROJECT DID NOT BUILD PROPERLY, CHECK BUILD COMPLETES SUCCESSFULLY
 				exit 1
 			}
@@ -70,11 +71,11 @@ if [ -z $build_cmd ]; then
 	fi
 	if [ $(ls | grep gradle.properties | wc -l) -gt 0 ]; then
 		./gradlew -version && {
-			build_cmd="./gradlew clean build"
+			COV_BUILD_BUILD_CMD="./gradlew clean build"
 			./gradlew stop
-			echo COV_SCAN: [BUILD] $cov_build_cmd $build_cmd
+			echo COV_SCAN: [BUILD] $cov_build_cmd $COV_BUILD_BUILD_CMD
 
-			$cov_build_cmd $build_cmd || 
+			$cov_build_cmd $COV_BUILD_BUILD_CMD || 
 			{
 				echo COV_SCAN: [ERROR] GRADLE PROJECT DID NOT BUILD PROPERLY, CHECK BUILD COMPLETES SUCCESSFULLY
 				exit 1
@@ -85,7 +86,7 @@ if [ -z $build_cmd ]; then
 		}
 	fi
 else
-	$cov_build_cmd $build_cmd || 
+	$cov_build_cmd $COV_BUILD_BUILD_CMD || 
 	{
 		echo COV_SCAN: [ERROR] PROJECT DID NOT BUILD PROPERLY, CHECK BUILD COMPLETES SUCCESSFULLY
 		exit 1
@@ -93,40 +94,40 @@ else
 fi
 
 # Capture Command
-if [ -z "$capture_cmd" ]; then
+if [ -z "$COV_CAPTURE_FLAGS" ]; then
 	if [ $(ls package.json | wc -l) -gt 0 ]; then
-		capture_cmd="--project-dir ."
+		COV_CAPTURE_FLAGS="--project-dir ."
 	elif [ $(find . -type f \( -name "*.html" -or -name "*.htm" -or -name "*.js" -or -name "*.rb" -or -name "*.py" -or -name "*.ts" -or -name "*.php" \) | wc -l) -gt 0 ]; then
-		capture_cmd="--source-dir ."
+		COV_CAPTURE_FLAGS="--source-dir ."
 	fi
 fi
 
-if [ -n "$capture_cmd" ]; then	
-        echo COV_SCAN: [CAPTURE] cov-capture --dir idir $capture_cmd
-	cov-capture --dir idir $capture_cmd
+if [ -n "$COV_CAPTURE_FLAGS" ]; then	
+        echo COV_SCAN: [CAPTURE] cov-capture --dir idir $COV_CAPTURE_FLAGS
+	cov-capture --dir idir $COV_CAPTURE_FLAGS
 fi
 
 # Analysis Command
-if [ $audit_checkers -eq 1 ]; then
-        analysis_flags+=" --enable-audit-checkers"
+if [ $COV_ANALYZE_AUDIT_CHECKERS -eq 1 ]; then
+        COV_ANALYZE_FLAGS+=" --enable-audit-checkers"
 fi
 
-if [ $quality -eq 1 ]; then
-	analysis_flags+=" --all"
+if [ $COV_ANALYZE_QUALITY -eq 1 ]; then
+	COV_ANALYZE_FLAGS+=" --all"
 fi
 
-if [ $security -eq 1 ]; then
-	analysis_flags+=" --webapp-security" 	
-	if [ $quality -eq 0 ]; then
-		analysis_flags+=" --disable-default"
+if [ $COV_ANALYZE_SECURITY -eq 1 ]; then
+	COV_ANALYZE_FLAGS+=" --webapp-security" 	
+	if [ $COV_ANALYZE_QUALITY -eq 0 ]; then
+		COV_ANALYZE_FLAGS+=" --disable-default"
 	fi
 fi
 
-if [ $distrust_all -eq 1 ]; then
-	analysis_flags+=" --distrust-all"
+if [ $COV_ANALYZE_DISTRUST_ALL -eq 1 ]; then
+	COV_ANALYZE_FLAGS+=" --distrust-all"
 fi
 
-echo COV_SCAN: [ANALYZE] cov-analyze --dir idir --strip-path $(pwd) $analysis_flags
-cov-analyze --dir idir --strip-path $(pwd) $analysis_flags
+echo COV_SCAN: [ANALYZE] cov-analyze --dir idir --strip-path $(pwd) $COV_ANALYZE_FLAGS
+cov-analyze --dir idir --strip-path $(pwd) $COV_ANALYZE_FLAGS
 
-cov-commit-defects --dir idir --url $COV_URL --stream $(git
+cov-commit-defects --dir idir --url $COV_URL --on-new-cert trust --stream $COV_STREAM

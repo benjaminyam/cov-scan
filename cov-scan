@@ -10,7 +10,6 @@ COV_STREAM=${COV_STREAM-$COV_PROJECT-$(git rev-parse --abbrev-ref HEAD)}
 
 cov_build_cmd="cov-build --dir idir"
 
-
 #cpu_cmd="cat /proc/cpuinfo | grep processor | wc -l"
 cpu_cmd="nproc"
 
@@ -95,7 +94,7 @@ fi
 
 # Capture Command
 if [ -z "$COV_CAPTURE_FLAGS" ]; then
-	if [ $(ls package.json | wc -l) -gt 0 ]; then
+	if [ $(ls | grep package.json | wc -l) -gt 0 ]; then
 		COV_CAPTURE_FLAGS="--project-dir ."
 	elif [ $(find . -type f \( -name "*.html" -or -name "*.htm" -or -name "*.js" -or -name "*.rb" -or -name "*.py" -or -name "*.ts" -or -name "*.php" \) | wc -l) -gt 0 ]; then
 		COV_CAPTURE_FLAGS="--source-dir ."

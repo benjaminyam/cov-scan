@@ -94,7 +94,7 @@ fi
 if [ -z "$capture_cmd" ]; then
 	if [ $(ls package.json | wc -l) -gt 0 ]; then
 		capture_cmd="--project-dir ."
-	elif [ $(find . -type f \( -name "*.html" -or -name "*.js" -or -name "*.rb" -or -name "*.py" -or -name "*.ts" -or -name "*.php" \) | wc -l) -gt 0 ]; then
+	elif [ $(find . -type f \( -name "*.html" -or -name "*.htm" -or -name "*.js" -or -name "*.rb" -or -name "*.py" -or -name "*.ts" -or -name "*.php" \) | wc -l) -gt 0 ]; then
 		capture_cmd="--source-dir ."
 	fi
 fi

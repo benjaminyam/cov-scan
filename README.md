@@ -1,5 +1,14 @@
 # cov-scan
+## Source Code Langage Supported
 Description
+### Auto-build Systems Supported
+- Dotnet (Msbuild)
+- Go
+- Gradle
+- Maven
+- Npm
+- Yarn
+- Make
 
 ## Prerequisites
 ### Platform Support
@@ -11,7 +20,6 @@ The specific platforms used in testing are Ubuntu 18.04 and macOS 11.
 ### Packages deployed
 - this cov-scan project
 - cov-analysis installed (based on the platform)
-
 
 ## Setup
 ## Variables
@@ -37,3 +45,18 @@ export COV_URL=https://synopsys.company.com
 ```
 
 ### Project-based Variables
+All project-based variables have defaults and these can be overridden by setting the variabkes before running the script.
+
+Overriding 
+COV_BUILD_BUILD_CMD=${COV_BUILD_BUILD_CMD-""}
+COV_CAPTURE_FLAGS=${COV_CAPTURE_FLAGS-""}
+
+COV_ANALYZE_QUALITY=${COV_ANALYZE_QUALITY-1}
+COV_ANALYZE_SECURITY=${COV_ANALYZE_SECURITY-1}
+COV_ANALYZE_DISTRUST_ALL=${COV_ANALYZE_DISTRUST_ALL-0}
+COV_ANALYZE_AUDIT_CHECKERS=${COV_ANALYZE_AUDIT_CHECKERS-0}
+COV_ANALYZE_FLAGS=${COV_ANALYZE_FLAGS-""}
+
+COV_PROJECT=${COV_PROJECT-$(basename `git rev-parse --show-toplevel`)}
+COV_STREAM=${COV_STREAM-$COV_PROJECT-$(git rev-parse --abbrev-ref HEAD)}
+

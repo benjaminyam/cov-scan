@@ -2,11 +2,11 @@
 COV_BUILD_BUILD_CMD=${COV_BUILD_BUILD_CMD-""}
 COV_CAPTURE_FLAGS=${COV_CAPTURE_FLAGS-""}
 
+COV_ANALYZE_FLAGS=${COV_ANALYZE_FLAGS-""}
 COV_ANALYZE_QUALITY=${COV_ANALYZE_QUALITY-1}
 COV_ANALYZE_SECURITY=${COV_ANALYZE_SECURITY-1}
 COV_ANALYZE_DISTRUST_ALL=${COV_ANALYZE_DISTRUST_ALL-0}
 COV_ANALYZE_AUDIT_CHECKERS=${COV_ANALYZE_AUDIT_CHECKERS-0}
-COV_ANALYZE_FLAGS=${COV_ANALYZE_FLAGS-""}
 
 COV_PROJECT=${COV_PROJECT-$(basename `git rev-parse --show-toplevel`)}
 COV_STREAM=${COV_STREAM-$COV_PROJECT-$(git rev-parse --abbrev-ref HEAD)}
@@ -22,7 +22,7 @@ fi
 
 # Build Command
 if [ -z $COV_BUILD_BUILD_CMD ]; then
-	if [ $(ls | grep pom.xml | wc -l) -gt 0 ]; then
+	if [ -f "pom.xml" ]; then
 		mvn -version &>/dev/null && {
 			COV_BUILD_BUILD_CMD="mvn -T $($cpu_cmd) clean compile -DskipTests -Dmaven.test.skip=true"
 			echo COV_SCAN: [BUILD] $cov_build_cmd $COV_BUILD_BUILD_CMD
@@ -37,7 +37,7 @@ if [ -z $COV_BUILD_BUILD_CMD ]; then
 			COV_CAPTURE_FLAGS="--source-dir ."
 		}
 	fi
-	if [ $(ls | grep go.mod | wc -l) -gt 0 ]; then
+	if [ -f "go.mod" ]; then
 		go version &>/dev/null && {
 			echo COV_SCAN: [CLEAN] go clean
 			go clean
@@ -54,7 +54,7 @@ if [ -z $COV_BUILD_BUILD_CMD ]; then
 		}
 
 	fi
-	if [ $(ls | grep .sln | wc -l) -gt 0 ]; then
+	if [ -f *".sln" ]; then
 		dotnet --info &>/dev/null && { 
 			echo COV_SCAN: [CLEAN] dotnet clean
 			dotnet clean
@@ -70,7 +70,7 @@ if [ -z $COV_BUILD_BUILD_CMD ]; then
 			exit 1
 		}
 	fi
-	if [ $(ls | grep gradle.properties | wc -l) -gt 0 ]; then
+	if [ -f "gradle.properties" ]; then
 		./gradlew -version && {
 			COV_BUILD_BUILD_CMD="./gradlew clean build"
 			./gradlew stop
@@ -86,6 +86,22 @@ if [ -z $COV_BUILD_BUILD_CMD ]; then
 			exit 1
 		}
 	fi
+	if [ -f "Makefile" ] || [ -f "makefile" ]	; then
+		make clean && {
+			COV_BUILD_BUILD_CMD="make"
+			echo COV_SCAN: [BUILD] $cov_build_cmd $COV_BUILD_BUILD_CMD
+			COV_ANA
+
+			$cov_build_cmd $COV_BUILD_BUILD_CMD || 
+			{
+				echo COV_SCAN: [ERROR] MAKE PROJECT DID NOT BUILD PROPERLY, CHECK BUILD COMPLETES SUCCESSFULLY
+				exit 1
+			}
+		} || {
+			echo COV_SCAN: [ERROR] MAKEFILE DETECTED BUT MAKE COULD NOT CLEAN, STOPPING CAPTURE
+			exit 1
+		}
+	fi
 else
 	$cov_build_cmd $COV_BUILD_BUILD_CMD || 
 	{
@@ -96,7 +112,7 @@ fi
 
 # Capture Command
 if [ -z "$COV_CAPTURE_FLAGS" ]; then
-	if [ $(ls | grep package.json | wc -l) -gt 0 ]; then
+	if [ -f "package.json" ]; then
 		COV_CAPTURE_FLAGS="--project-dir ."
 	elif [ $(find . -type f \( -name "*.html" -or -name "*.htm" -or -name "*.js" -or -name "*.rb" -or -name "*.py" -or -name "*.ts" -or -name "*.php" \) | wc -l) -gt 0 ]; then
 		COV_CAPTURE_FLAGS="--source-dir ."
@@ -118,7 +134,7 @@ if [ $COV_ANALYZE_QUALITY -eq 1 ]; then
 fi
 
 if [ $COV_ANALYZE_SECURITY -eq 1 ]; then
-	COV_ANALYZE_FLAGS+=" --webapp-security" 	
+	COV_ANALYZE_FLAGS+=" --security --webapp-security"
 	if [ $COV_ANALYZE_QUALITY -eq 0 ]; then
 		COV_ANALYZE_FLAGS+=" --disable-default"
 	fi
@@ -132,10 +148,22 @@ echo COV_SCAN: [ANALYZE] cov-analyze --dir idir --strip-path $(pwd) $COV_ANALYZE
 cov-analyze --dir idir --strip-path $(pwd) $COV_ANALYZE_FLAGS
 
 # Commit Defects
-
-if [ $(cov-manage-im --url $COV_URL --mode streams --name $COV_STREAM --show -no-headers | wc -l) -eq 0 ]; then
-	cov-manage-im --url $COV_URL --on-new-cert trust --mode streams  --add --set name:$COV_STREAM
-	cov-manage-im --url $COV_URL --on-new-cert trust --mode projects --add --set name:$COV_PROJECT || true
-    cov-manage-im --url $COV_URL --on-new-cert trust --mode projects --name $COV_PROJECT --update --insert stream:$COV_STREAM
-fi
-cov-commit-defects --dir idir --url $COV_URL --on-new-cert trust --stream $COV_STREAM
+stream=$(cov-manage-im --url $COV_URL --mode streams --name $COV_STREAM --show -no-headers) &&
+stream_num=$(echo $stream | wc -l) && {
+	if [ $stream_num -eq 0 ]; then
+		echo COV_SCAN: [COMMIT] STREAM DOES NOT EXIST ON CONNECT, CREATING PROJECT/STREAM \($COV_PROJECT/$COV_STREAM\)
+		cov-manage-im --url $COV_URL --on-new-cert trust --mode streams  --add --set name:$COV_STREAM
+		cov-manage-im --url $COV_URL --on-new-cert trust --mode projects --add --set name:$COV_PROJECT || true
+		cov-manage-im --url $COV_URL --on-new-cert trust --mode projects --name $COV_PROJECT --update --insert stream:$COV_STREAM
+	fi
+	echo COV_SCAN: [COMMIT] cov-commit-defects --dir idir --url $COV_URL --on-new-cert trust --stream $COV_STREAM
+	cov-commit-defects --dir idir --url $COV_URL --on-new-cert trust --stream $COV_STREAM
+} || {
+	curl -kL $COV_URL &>/dev/null  && {
+		echo COV_SCAN: [ERROR] USER AUTHENTICATION/AUTHORIZATION FAILURE, PLEASE ENSURE THAT USERNAME/PASSWORD IS CORRECT AND USER HAS COMMIT PERMISSION
+		exit 1
+	} || {
+		echo COV_SCAN: [ERROR] CANNOT REACH CONNECT, PLEASE ENSURE THAT CONNECT SERVER IS RUNNING
+		exit 1
+	}
+}

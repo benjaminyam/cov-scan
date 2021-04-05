@@ -37,7 +37,7 @@ if [ -z $COV_BUILD_BUILD_CMD ]; then
 			COV_CAPTURE_FLAGS="--source-dir ."
 		}
 	fi
-	if [ -f "go.mod" ]; then
+	if [ -f "main.go" ]; then
 		go version &>/dev/null && {
 			echo COV_SCAN: [CLEAN] go clean
 			go clean
@@ -70,7 +70,7 @@ if [ -z $COV_BUILD_BUILD_CMD ]; then
 			exit 1
 		}
 	fi
-	if [ -f "gradle.properties" ]; then
+	if [ -f "build.gradle" ] || [ -f "build.gradle.kts" ]; then
 		./gradlew -version && {
 			COV_BUILD_BUILD_CMD="./gradlew clean build"
 			./gradlew stop
@@ -148,8 +148,7 @@ echo COV_SCAN: [ANALYZE] cov-analyze --dir idir --strip-path $(pwd) $COV_ANALYZE
 cov-analyze --dir idir --strip-path $(pwd) $COV_ANALYZE_FLAGS
 
 # Commit Defects
-stream=$(cov-manage-im --url $COV_URL --mode streams --name $COV_STREAM --show -no-headers) &&
-stream_num=$(echo $stream | wc -l) && {
+stream_num=$(cov-manage-im --url $COV_URL --mode streams --name $COV_STREAM --show -no-headers | wc -l) && {
 	if [ $stream_num -eq 0 ]; then
 		echo COV_SCAN: [COMMIT] STREAM DOES NOT EXIST ON CONNECT, CREATING PROJECT/STREAM \($COV_PROJECT/$COV_STREAM\)
 		cov-manage-im --url $COV_URL --on-new-cert trust --mode streams  --add --set name:$COV_STREAM

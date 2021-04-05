@@ -72,7 +72,7 @@ if [ -z $COV_BUILD_BUILD_CMD ]; then
 	fi
 	if [ -f "build.gradle" ] || [ -f "build.gradle.kts" ]; then
 		./gradlew -version && {
-			COV_BUILD_BUILD_CMD="./gradlew clean build"
+			COV_BUILD_BUILD_CMD="./gradlew clean assembleRelease"
 			./gradlew stop
 			echo COV_SCAN: [BUILD] $cov_build_cmd $COV_BUILD_BUILD_CMD
 

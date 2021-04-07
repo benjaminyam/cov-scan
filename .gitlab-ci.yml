@@ -6,9 +6,6 @@ variables:
   # when running from the command line.
   # `installAtEnd` and `deployAtEnd` are only effective with recent version of the corresponding plugins.
   # MAVEN_CLI_OPTS: "-DskipTests -Dmaven.test.skip=true"
-  # COV_USER: "admin"
-  # COVERITY_PASSPHRASE: "771C3E9AF9CA5A34A6FEED0A489FBC1E"
-
 
 kotlin: 
   image: androidsdk/android-30

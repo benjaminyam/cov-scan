@@ -4,6 +4,6 @@ cd WebGoat
 git checkout tags/v8.1.0
 # cov-scan
 cov-build --dir idir mvn clean compile -DskipTests -Dmaven.test.skip=true
-cov-capture --dir idir --source-dir . --language javascript --language php --language ruby --language python
+cov-capture --dir idir --project-dir .
 cov-analyze --dir idir --strip-path $(pwd) --all --security --webapp-security
 cov-commit-defects --dir idir --url https://ec2-122-248-241-219.ap-southeast-1.compute.amazonaws.com:8443 --on-new-cert trust --stream WebGoat-HEAD

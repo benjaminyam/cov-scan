@@ -17,6 +17,7 @@ COV_PROJECT=${COV_PROJECT-$(basename `git rev-parse --show-toplevel`)}
 COV_STREAM=${COV_STREAM-$COV_PROJECT-$(git rev-parse --abbrev-ref HEAD)}
 
 cov_build_cmd="cov-build --dir $COV_IDIR"
+cov_android=0
 
 #cpu_cmd="cat /proc/cpuinfo | grep processor | wc -l"
 cpu_cmd="nproc"
@@ -97,9 +98,7 @@ if [ -z $COV_BUILD_BUILD_CMD ]; then
 			COV_BUILD_BUILD_CMD="./gradlew clean assembleRelease"
 			echo COV_SCAN: [BUILD] $cov_build_cmd $COV_BUILD_BUILD_CMD
 
-			if [ -z "$COV_ANALYZE_FLAGS" ] && [ $COV_ANALYZE_SECURITY -eq 1 ]; then
-				COV_ANALYZE_FLAGS+=" --android-security"
-			fi
+			cov_android=1
 
 			$cov_build_cmd $COV_BUILD_BUILD_CMD || 
 			{
@@ -147,6 +146,10 @@ if [ -z "$COV_ANALYZE_FLAGS" ]; then
 
 	if [ $COV_ANALYZE_SECURITY -eq 1 ]; then
 		COV_ANALYZE_FLAGS+=" --security --webapp-security"
+
+		if [ $cov_android -eq 1 ]; then
+			COV_ANALYZE_FLAGS+=" --android-security"
+
 		if [ $COV_ANALYZE_QUALITY -eq 0 ]; then
 			COV_ANALYZE_FLAGS+=" --disable-default"
 		fi

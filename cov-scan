@@ -6,8 +6,8 @@
 COV_IDIR=${COV_IDIR-idir}
 COV_BUILD_BUILD_CMD=${COV_BUILD_BUILD_CMD-""}
 COV_CAPTURE_FLAGS=${COV_CAPTURE_FLAGS-""}
-
 COV_ANALYZE_FLAGS=${COV_ANALYZE_FLAGS-""}
+
 COV_ANALYZE_QUALITY=${COV_ANALYZE_QUALITY-1}
 COV_ANALYZE_SECURITY=${COV_ANALYZE_SECURITY-1}
 COV_ANALYZE_DISTRUST_ALL=${COV_ANALYZE_DISTRUST_ALL-0}
@@ -97,7 +97,7 @@ if [ -z $COV_BUILD_BUILD_CMD ]; then
 			COV_BUILD_BUILD_CMD="./gradlew clean assembleRelease"
 			echo COV_SCAN: [BUILD] $cov_build_cmd $COV_BUILD_BUILD_CMD
 
-			if [ $COV_ANALYZE_SECURITY -eq 1 ]; then
+			if [ -z "$COV_ANALYZE_FLAGS" ] && [ $COV_ANALYZE_SECURITY -eq 1 ]; then
 				COV_ANALYZE_FLAGS+=" --android-security"
 			fi
 
@@ -134,23 +134,26 @@ echo COV_SCAN: [CAPTURE] cov-capture --dir $COV_IDIR $COV_CAPTURE_FLAGS
 cov-capture --dir $COV_IDIR $COV_CAPTURE_FLAGS
 
 # Analysis Command
-if [ $COV_ANALYZE_AUDIT_CHECKERS -eq 1 ]; then
-        COV_ANALYZE_FLAGS+=" --enable-audit-checkers"
-fi
-
-if [ $COV_ANALYZE_QUALITY -eq 1 ]; then
-	COV_ANALYZE_FLAGS+=" --all"
-fi
-
-if [ $COV_ANALYZE_SECURITY -eq 1 ]; then
-	COV_ANALYZE_FLAGS+=" --security --webapp-security"
-	if [ $COV_ANALYZE_QUALITY -eq 0 ]; then
-		COV_ANALYZE_FLAGS+=" --disable-default"
+if [ -z "$COV_ANALYZE_FLAGS" ]; then
+	$COV_ANALYZE_FLAGS+=" --xx-use-buda-for-cs-and-java-security"
+	if [ $COV_ANALYZE_AUDIT_CHECKERS -eq 1 ]; then
+			COV_ANALYZE_FLAGS+=" --enable-audit-checkers"
 	fi
-fi
 
-if [ $COV_ANALYZE_DISTRUST_ALL -eq 1 ]; then
-	COV_ANALYZE_FLAGS+=" --distrust-all"
+	if [ $COV_ANALYZE_QUALITY -eq 1 ]; then
+		COV_ANALYZE_FLAGS+=" --all"
+	fi
+
+	if [ $COV_ANALYZE_SECURITY -eq 1 ]; then
+		COV_ANALYZE_FLAGS+=" --security --webapp-security"
+		if [ $COV_ANALYZE_QUALITY -eq 0 ]; then
+			COV_ANALYZE_FLAGS+=" --disable-default"
+		fi
+	fi
+
+	if [ $COV_ANALYZE_DISTRUST_ALL -eq 1 ]; then
+		COV_ANALYZE_FLAGS+=" --distrust-all"
+	fi
 fi
 
 echo COV_SCAN: [ANALYZE] cov-analyze --dir $COV_IDIR --strip-path $(pwd) $COV_ANALYZE_FLAGS

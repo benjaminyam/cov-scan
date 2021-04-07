@@ -59,6 +59,7 @@ If auto-capture is used, please ignore setting these variables. If these variabl
 COV_BUILD_BUILD_CMD=mvn clean compile
 COV_CAPTURE_FLAGS=--source-dir . --language javascript
 COV_ANALYZE_FLAGS=--all --webapp-security
+COV_IDIR=idir
 ```
 
 

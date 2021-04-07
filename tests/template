@@ -1,7 +1,0 @@
-docker run -v=$HOME/cov-scan:/cov-scan -v=$HOME/coverity:/coverity -it androidsdk/android-30
-export PATH=/coverity/bin:/cov-scan:$PATH
-git clone https://github.com/tachiyomiorg/tachiyomi
-cd tachiyomi/
-cov-scan
-
-docker run -v=$HOME/cov-scan:/cov-scan -v=$HOME/coverity:/coverity -it androidsdk/android-30 

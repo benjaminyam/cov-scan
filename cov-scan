@@ -1,4 +1,9 @@
 # VARIABLES TO OVERRIDE
+# COV_USER=admin
+# COVERITY_PASSPHRASE=password_or_token
+# COV_URL=https://coverity.company.com
+
+COV_IDIR=${COV_IDIR-idir}
 COV_BUILD_BUILD_CMD=${COV_BUILD_BUILD_CMD-""}
 COV_CAPTURE_FLAGS=${COV_CAPTURE_FLAGS-""}
 
@@ -8,11 +13,10 @@ COV_ANALYZE_SECURITY=${COV_ANALYZE_SECURITY-1}
 COV_ANALYZE_DISTRUST_ALL=${COV_ANALYZE_DISTRUST_ALL-0}
 COV_ANALYZE_AUDIT_CHECKERS=${COV_ANALYZE_AUDIT_CHECKERS-0}
 
-COV_COMMIT=${COV_COMMIT-1}
 COV_PROJECT=${COV_PROJECT-$(basename `git rev-parse --show-toplevel`)}
 COV_STREAM=${COV_STREAM-$COV_PROJECT-$(git rev-parse --abbrev-ref HEAD)}
 
-cov_build_cmd="cov-build --dir idir"
+cov_build_cmd="cov-build --dir $COV_IDIR"
 
 #cpu_cmd="cat /proc/cpuinfo | grep processor | wc -l"
 cpu_cmd="nproc"
@@ -26,6 +30,7 @@ if [ -z $COV_BUILD_BUILD_CMD ]; then
 	if [ -f "pom.xml" ]; then
 		mvn -version &>/dev/null && {
 			COV_BUILD_BUILD_CMD="mvn -T $($cpu_cmd) clean compile -DskipTests -Dmaven.test.skip=true"
+			# COV_BUILD_BUILD_CMD="mvn clean compile -DskipTests -Dmaven.test.skip=true"
 			echo COV_SCAN: [BUILD] $cov_build_cmd $COV_BUILD_BUILD_CMD
 
 			$cov_build_cmd $COV_BUILD_BUILD_CMD || 
@@ -71,22 +76,6 @@ if [ -z $COV_BUILD_BUILD_CMD ]; then
 			exit 1
 		}
 	fi
-	if [ -f "build.gradle" ] || [ -f "build.gradle.kts" ]; then
-		./gradlew -version && {
-			COV_BUILD_BUILD_CMD="./gradlew clean assembleRelease"
-			./gradlew stop
-			echo COV_SCAN: [BUILD] $cov_build_cmd $COV_BUILD_BUILD_CMD
-
-			$cov_build_cmd $COV_BUILD_BUILD_CMD || 
-			{
-				echo COV_SCAN: [ERROR] GRADLE PROJECT DID NOT BUILD PROPERLY, CHECK BUILD COMPLETES SUCCESSFULLY
-				exit 1
-			}
-		} || {
-			echo COV_SCAN: [ERROR] GRADLE PROJECT DETECTED BUT GRADLE NOT INSTALLED, STOPPING CAPTURE
-			exit 1
-		}
-	fi
 	if [ -f "Makefile" ] || [ -f "makefile" ]	; then
 		make clean && {
 			COV_BUILD_BUILD_CMD="make"
@@ -100,6 +89,25 @@ if [ -z $COV_BUILD_BUILD_CMD ]; then
 			}
 		} || {
 			echo COV_SCAN: [ERROR] MAKEFILE DETECTED BUT MAKE COULD NOT CLEAN, STOPPING CAPTURE
+			exit 1
+		}
+	fi
+	if [ -f "build.gradle" ] || [ -f "build.gradle.kts" ]; then
+		./gradlew -version && {
+			COV_BUILD_BUILD_CMD="./gradlew clean assembleRelease"
+			echo COV_SCAN: [BUILD] $cov_build_cmd $COV_BUILD_BUILD_CMD
+
+			if [ $COV_ANALYZE_SECURITY -eq 1 ]; then
+				COV_ANALYZE_FLAGS+=" --android-security"
+			fi
+
+			$cov_build_cmd $COV_BUILD_BUILD_CMD || 
+			{
+				echo COV_SCAN: [ERROR] GRADLE PROJECT DID NOT BUILD PROPERLY, CHECK BUILD COMPLETES SUCCESSFULLY
+				exit 1
+			}
+		} || {
+			echo COV_SCAN: [ERROR] GRADLE PROJECT DETECTED BUT GRADLE NOT INSTALLED, STOPPING CAPTURE
 			exit 1
 		}
 	fi
@@ -122,8 +130,8 @@ if [ -z "$COV_CAPTURE_FLAGS" ]; then
 	fi
 fi
 
-echo COV_SCAN: [CAPTURE] cov-capture --dir idir $COV_CAPTURE_FLAGS
-cov-capture --dir idir $COV_CAPTURE_FLAGS
+echo COV_SCAN: [CAPTURE] cov-capture --dir $COV_IDIR $COV_CAPTURE_FLAGS
+cov-capture --dir $COV_IDIR $COV_CAPTURE_FLAGS
 
 # Analysis Command
 if [ $COV_ANALYZE_AUDIT_CHECKERS -eq 1 ]; then
@@ -135,7 +143,7 @@ if [ $COV_ANALYZE_QUALITY -eq 1 ]; then
 fi
 
 if [ $COV_ANALYZE_SECURITY -eq 1 ]; then
-	COV_ANALYZE_FLAGS+=" --security --webapp-security --android-security"
+	COV_ANALYZE_FLAGS+=" --security --webapp-security"
 	if [ $COV_ANALYZE_QUALITY -eq 0 ]; then
 		COV_ANALYZE_FLAGS+=" --disable-default"
 	fi
@@ -145,27 +153,26 @@ if [ $COV_ANALYZE_DISTRUST_ALL -eq 1 ]; then
 	COV_ANALYZE_FLAGS+=" --distrust-all"
 fi
 
-echo COV_SCAN: [ANALYZE] cov-analyze --dir idir --strip-path $(pwd) $COV_ANALYZE_FLAGS
-cov-analyze --dir idir --strip-path $(pwd) $COV_ANALYZE_FLAGS
+echo COV_SCAN: [ANALYZE] cov-analyze --dir $COV_IDIR --strip-path $(pwd) $COV_ANALYZE_FLAGS
+cov-analyze --dir $COV_IDIR --strip-path $(pwd) $COV_ANALYZE_FLAGS
 
 # Commit Defects
-if [ $COV_COMMIT -eq 1 ]; then
-	stream_num=$(cov-manage-im --url $COV_URL --mode streams --name $COV_STREAM --show -no-headers | wc -l) && {
-		if [ $stream_num -eq 0 ]; then
-			echo COV_SCAN: [COMMIT] STREAM DOES NOT EXIST ON CONNECT, CREATING PROJECT/STREAM \($COV_PROJECT/$COV_STREAM\)
-			cov-manage-im --url $COV_URL --on-new-cert trust --mode streams  --add --set name:$COV_STREAM
-			cov-manage-im --url $COV_URL --on-new-cert trust --mode projects --add --set name:$COV_PROJECT || true
-			cov-manage-im --url $COV_URL --on-new-cert trust --mode projects --name $COV_PROJECT --update --insert stream:$COV_STREAM
-		fi
-		echo COV_SCAN: [COMMIT] cov-commit-defects --dir idir --url $COV_URL --on-new-cert trust --stream $COV_STREAM
-		cov-commit-defects --dir idir --url $COV_URL --on-new-cert trust --stream $COV_STREAM
+stream_num=$(cov-manage-im --url $COV_URL --on-new-cert trust --mode streams --name $COV_STREAM --show -no-headers | wc -l) && {
+	if [ $stream_num -eq 0 ]; then
+		echo COV_SCAN: [COMMIT] STREAM DOES NOT EXIST ON CONNECT, CREATING PROJECT/STREAM \($COV_PROJECT/$COV_STREAM\)
+		cov-manage-im --url $COV_URL --on-new-cert trust --mode streams  --add --set name:$COV_STREAM
+		cov-manage-im --url $COV_URL --on-new-cert trust --mode projects --add --set name:$COV_PROJECT || true
+		cov-manage-im --url $COV_URL --on-new-cert trust --mode projects --name $COV_PROJECT --update --insert stream:$COV_STREAM
+	fi
+	
+	echo COV_SCAN: [COMMIT] cov-commit-defects --dir $COV_IDIR --url $COV_URL --on-new-cert trust --stream $COV_STREAM
+	cov-commit-defects --dir $COV_IDIR --url $COV_URL --on-new-cert trust --stream $COV_STREAM
+} || {
+	curl -kL $COV_URL &>/dev/null  && {
+		echo COV_SCAN: [ERROR] USER AUTHENTICATION/AUTHORIZATION FAILURE, PLEASE ENSURE THAT USERNAME/PASSWORD IS CORRECT AND USER HAS COMMIT PERMISSION
+		exit 1
 	} || {
-		curl -kL $COV_URL &>/dev/null  && {
-			echo COV_SCAN: [ERROR] USER AUTHENTICATION/AUTHORIZATION FAILURE, PLEASE ENSURE THAT USERNAME/PASSWORD IS CORRECT AND USER HAS COMMIT PERMISSION
-			exit 1
-		} || {
-			echo COV_SCAN: [ERROR] CANNOT REACH CONNECT, PLEASE ENSURE THAT CONNECT SERVER IS RUNNING
-			exit 1
-		}
+		echo COV_SCAN: [ERROR] CANNOT REACH CONNECT, PLEASE ENSURE THAT CONNECT SERVER IS RUNNING
+		exit 1
 	}
-fi
+}

@@ -149,7 +149,8 @@ if [ -z "$COV_ANALYZE_FLAGS" ]; then
 
 		if [ $cov_android -eq 1 ]; then
 			COV_ANALYZE_FLAGS+=" --android-security"
-
+		fi
+		
 		if [ $COV_ANALYZE_QUALITY -eq 0 ]; then
 			COV_ANALYZE_FLAGS+=" --disable-default"
 		fi

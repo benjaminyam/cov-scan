@@ -15,9 +15,10 @@ kotlin:
     - docker
   script:
     - 'tests/kotlin/tachiyomi.sh'
+  when: manual
 
 java: 
-  image: maven:3.8.1-adoptopenjdk-11
+  image: maven:3.8.1-adoptopenjdk-15
   stage: test
   tags:
     - synopsys
@@ -26,5 +27,5 @@ java:
     - 'tests/java/webgoat.sh'
   # only:
   #   - develop
-  # except:
+  # except:cd 
   #   - master

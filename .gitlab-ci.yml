@@ -24,6 +24,7 @@ java:
     - synopsys
     - docker
   script:
+    - 'export'
     - 'tests/java/webgoat.sh'
   # only:
   #   - develop

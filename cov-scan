@@ -44,7 +44,7 @@ if [ -z $COV_BUILD_BUILD_CMD ]; then
 			COV_CAPTURE_FLAGS="--source-dir ."
 		}
 	fi
-	if [ -f "main.go" ]; then
+	if [ -f "main.go" ] || [ -f "go.mod" ]; then
 		go version &>/dev/null && {
 			echo COV_SCAN: [CLEAN] go clean
 			go clean

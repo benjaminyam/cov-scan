@@ -1,24 +1,6 @@
 variables:
 
 
-
-golang-gjson: 
-  image: golang
-  stage: test
-  tags:
-    - synopsys
-    - docker
-  script:
-    - 'tests/golang/gjson.sh'
-golang-yaml: 
-  image: golang
-  stage: test
-  tags:
-    - synopsys
-    - docker
-  script:
-    - 'tests/golang/go-yaml.sh'
-
 golang-govwa: 
   image: golang
   stage: test
@@ -28,7 +10,7 @@ golang-govwa:
   script:
     - 'tests/golang/govwa.sh'
 
-golang-govwa: 
+golang-vault: 
   image: golang
   stage: test
   tags:

@@ -1,6 +1,6 @@
 variables:
 
-kotlin: 
+golang: 
   image: golang
   stage: test
   tags:

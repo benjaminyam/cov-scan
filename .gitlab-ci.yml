@@ -1,16 +1,6 @@
 variables:
 
 
-
-golang-go-cloud: 
-  image: golang
-  stage: test
-  tags:
-    - synopsys
-    - docker
-  script:
-    - 'tests/golang/go-cloud.sh'
-
 golang-go-ipfs: 
   image: golang
   stage: test
@@ -46,7 +36,7 @@ golang-go-ipfs:
     - synopsys
     - docker
   script:
-    - 'tests/golang/go-yaml.sh'
+    - 'tests/golang/go-ipfs.sh'
 
 golang-govwa: 
   image: golang

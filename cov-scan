@@ -111,6 +111,7 @@ if [ -z $COV_BUILD_BUILD_CMD ]; then
 		}
 	fi
 else
+	echo $cov_build_cmd $COV_BUILD_BUILD_CMD
 	$cov_build_cmd $COV_BUILD_BUILD_CMD || 
 	{
 		echo COV_SCAN: [ERROR] PROJECT DID NOT BUILD PROPERLY, CHECK BUILD COMPLETES SUCCESSFULLY

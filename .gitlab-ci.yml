@@ -1,15 +1,5 @@
 variables:
 
-
-golang-go-ipfs: 
-  image: golang
-  stage: test
-  tags:
-    - synopsys
-    - docker
-  script:
-    - 'tests/golang/go-ipfs.sh'
-
 golang-hugo: 
   image: golang
   stage: test

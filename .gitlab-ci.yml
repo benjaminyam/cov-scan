@@ -29,14 +29,14 @@ golang-consul:
   script:
     - 'tests/golang/consul.sh'
 
-golang-go-ipfs:
+golang-vulnerability-goapp:
   image: golang
   stage: test
   tags:
     - synopsys
     - docker
   script:
-    - 'tests/golang/go-ipfs.sh'
+    - 'tests/golang/vulnerability-goapp.sh'
 
 golang-govwa: 
   image: golang

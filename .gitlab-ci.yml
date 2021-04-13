@@ -69,17 +69,3 @@ java:
   # except:cd 
   #   - master
 
-  java: 
-  image: maven:3.8.1-adoptopenjdk-15
-  stage: test
-  tags:
-    - synopsys
-    - docker
-    - coverity
-  script:
-    - 'tests/java/webgoat.sh'
-  when: manual
-  # only:
-  #   - develop
-  # except:cd 
-  #   - master

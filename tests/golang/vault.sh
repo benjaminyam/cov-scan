@@ -5,4 +5,3 @@ cd vault
 export COV_BUILD_BUILD_CMD="go build -o bin/vault"
 time $COV_BUILD_BUILD_CMD
 cov-scan
-cov-scan

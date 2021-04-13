@@ -4,4 +4,3 @@ git clone https://github.com/gohugoio/hugo
 cd hugo
 time go build
 cov-scan
-cov-scan

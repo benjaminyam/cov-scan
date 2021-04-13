@@ -4,4 +4,3 @@ git clone https://github.com/hashicorp/consul
 cd consul
 time go build
 cov-scan
-cov-scan

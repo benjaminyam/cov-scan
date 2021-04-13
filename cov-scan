@@ -32,9 +32,10 @@ if [ -z $COV_BUILD_BUILD_CMD ]; then
 		mvn -version &>/dev/null && {
 			COV_BUILD_BUILD_CMD="mvn -T $($cpu_cmd) clean compile -DskipTests -Dmaven.test.skip=true"
 			# COV_BUILD_BUILD_CMD="mvn clean compile -DskipTests -Dmaven.test.skip=true"
-			echo COV_SCAN: [BUILD] $cov_build_cmd $COV_BUILD_BUILD_CMD
 
-			$cov_build_cmd $COV_BUILD_BUILD_CMD || 
+			echo COV_SCAN: [BUILD START] $cov_build_cmd $COV_BUILD_BUILD_CMD
+			time $cov_build_cmd $COV_BUILD_BUILD_CMD &&
+			echo COV_SCAN: [BUILD END] $cov_build_cmd $COV_BUILD_BUILD_CMD || 
 			{
 				echo COV_SCAN: [ERROR] MAVEN PROJECT DID NOT BUILD PROPERLY, CHECK BUILD COMPLETES SUCCESSFULLY
 				exit 1
@@ -49,8 +50,9 @@ if [ -z $COV_BUILD_BUILD_CMD ]; then
 			echo COV_SCAN: [CLEAN] go clean
 			go clean
 			COV_BUILD_BUILD_CMD="go build"
-			echo COV_SCAN: [BUILD] $cov_build_cmd $COV_BUILD_BUILD_CMD
-			$cov_build_cmd $COV_BUILD_BUILD_CMD || 
+
+			echo COV_SCAN: [BUILD START] $cov_build_cmd $COV_BUILD_BUILD_CMD
+			time $cov_build_cmd $COV_BUILD_BUILD_CMD || 
 			{
 				echo COV_SCAN: [ERROR] GO PROJECT DID NOT BUILD PROPERLY, CHECK BUILD COMPLETES SUCCESSFULLY
 				exit 1
@@ -66,9 +68,10 @@ if [ -z $COV_BUILD_BUILD_CMD ]; then
 			echo COV_SCAN: [CLEAN] dotnet clean
 			dotnet clean
 			COV_BUILD_BUILD_CMD="dotnet build"
-			echo COV_SCAN: [BUILD] $cov_build_cmd $COV_BUILD_BUILD_CMD
 
-			$cov_build_cmd $COV_BUILD_BUILD_CMD || {
+			echo COV_SCAN: [BUILD START] $cov_build_cmd $COV_BUILD_BUILD_CMD
+			time $cov_build_cmd $COV_BUILD_BUILD_CMD &&
+			echo COV_SCAN: [BUILD END] $cov_build_cmd $COV_BUILD_BUILD_CMD || {
 				echo COV_SCAN: [ERROR] DOTNET PROJECT DID NOT BUILD PROPERLY, CHECK BUILD COMPLETES SUCCESSFULLY
 				exit 1
 			}
@@ -80,10 +83,10 @@ if [ -z $COV_BUILD_BUILD_CMD ]; then
 	if [ -f "Makefile" ] || [ -f "makefile" ]	; then
 		make clean && {
 			COV_BUILD_BUILD_CMD="make"
-			echo COV_SCAN: [BUILD] $cov_build_cmd $COV_BUILD_BUILD_CMD
-			COV_ANA
 
-			$cov_build_cmd $COV_BUILD_BUILD_CMD || 
+			echo COV_SCAN: [BUILD START] $cov_build_cmd $COV_BUILD_BUILD_CMD
+			time $cov_build_cmd $COV_BUILD_BUILD_CMD &&
+			echo COV_SCAN: [BUILD END] $cov_build_cmd $COV_BUILD_BUILD_CMD || 
 			{
 				echo COV_SCAN: [ERROR] MAKE PROJECT DID NOT BUILD PROPERLY, CHECK BUILD COMPLETES SUCCESSFULLY
 				exit 1
@@ -96,11 +99,12 @@ if [ -z $COV_BUILD_BUILD_CMD ]; then
 	if [ -f "build.gradle" ] || [ -f "build.gradle.kts" ]; then
 		./gradlew -version && {
 			COV_BUILD_BUILD_CMD="./gradlew clean assembleRelease"
-			echo COV_SCAN: [BUILD] $cov_build_cmd $COV_BUILD_BUILD_CMD
 
 			cov_android=1
 
-			$cov_build_cmd $COV_BUILD_BUILD_CMD || 
+			echo COV_SCAN: [BUILD START] $cov_build_cmd $COV_BUILD_BUILD_CMD
+			time $cov_build_cmd $COV_BUILD_BUILD_CMD &&
+			echo COV_SCAN: [BUILD END] $cov_build_cmd $COV_BUILD_BUILD_CMD || 
 			{
 				echo COV_SCAN: [ERROR] GRADLE PROJECT DID NOT BUILD PROPERLY, CHECK BUILD COMPLETES SUCCESSFULLY
 				exit 1
@@ -111,8 +115,9 @@ if [ -z $COV_BUILD_BUILD_CMD ]; then
 		}
 	fi
 else
-	echo COV_SCAN: [BUILD] $cov_build_cmd $COV_BUILD_BUILD_CMD
-	$cov_build_cmd $COV_BUILD_BUILD_CMD || 
+	echo COV_SCAN: [BUILD START] $cov_build_cmd $COV_BUILD_BUILD_CMD
+	time $cov_build_cmd $COV_BUILD_BUILD_CMD &&
+	echo COV_SCAN: [BUILD END] $cov_build_cmd $COV_BUILD_BUILD_CMD || 
 	{
 		echo COV_SCAN: [ERROR] PROJECT DID NOT BUILD PROPERLY, CHECK BUILD COMPLETES SUCCESSFULLY
 		exit 1
@@ -130,8 +135,9 @@ if [ -z "$COV_CAPTURE_FLAGS" ]; then
 	fi
 fi
 
-echo COV_SCAN: [CAPTURE] cov-capture --dir $COV_IDIR $COV_CAPTURE_FLAGS
-cov-capture --dir $COV_IDIR $COV_CAPTURE_FLAGS
+echo COV_SCAN: [CAPTURE START] cov-capture --dir $COV_IDIR $COV_CAPTURE_FLAGS
+time cov-capture --dir $COV_IDIR $COV_CAPTURE_FLAGS
+echo COV_SCAN: [CAPTURE END] cov-capture --dir $COV_IDIR $COV_CAPTURE_FLAGS
 
 # Analysis Command
 if [ -z "$COV_ANALYZE_FLAGS" ]; then
@@ -162,8 +168,9 @@ if [ -z "$COV_ANALYZE_FLAGS" ]; then
 	fi
 fi
 
-echo COV_SCAN: [ANALYZE] cov-analyze --dir $COV_IDIR --strip-path $(pwd) $COV_ANALYZE_FLAGS
-cov-analyze --dir $COV_IDIR --strip-path $(pwd) $COV_ANALYZE_FLAGS
+echo COV_SCAN: [ANALYZE START] cov-analyze --dir $COV_IDIR --strip-path $(pwd) $COV_ANALYZE_FLAGS
+time cov-analyze --dir $COV_IDIR --strip-path $(pwd) $COV_ANALYZE_FLAGS
+echo COV_SCAN: [ANALYZE END] cov-analyze --dir $COV_IDIR --strip-path $(pwd) $COV_ANALYZE_FLAGS
 
 # Commit Defects
 stream_num=$(cov-manage-im --url $COV_URL --on-new-cert trust --mode streams --name $COV_STREAM --show -no-headers | wc -l) && {
@@ -174,8 +181,9 @@ stream_num=$(cov-manage-im --url $COV_URL --on-new-cert trust --mode streams --n
 		cov-manage-im --url $COV_URL --on-new-cert trust --mode projects --name $COV_PROJECT --update --insert stream:$COV_STREAM
 	fi
 	
-	echo COV_SCAN: [COMMIT] cov-commit-defects --dir $COV_IDIR --url $COV_URL --on-new-cert trust --stream $COV_STREAM
-	cov-commit-defects --dir $COV_IDIR --url $COV_URL --on-new-cert trust --stream $COV_STREAM
+	echo COV_SCAN: [COMMIT START] cov-commit-defects --dir $COV_IDIR --url $COV_URL --on-new-cert trust --stream $COV_STREAM
+	time cov-commit-defects --dir $COV_IDIR --url $COV_URL --on-new-cert trust --stream $COV_STREAM
+	echo COV_SCAN: [COMMIT END] cov-commit-defects --dir $COV_IDIR --url $COV_URL --on-new-cert trust --stream $COV_STREAM
 } || {
 	curl -kL $COV_URL &>/dev/null  && {
 		echo COV_SCAN: [ERROR] USER AUTHENTICATION/AUTHORIZATION FAILURE, PLEASE ENSURE THAT USERNAME/PASSWORD IS CORRECT AND USER HAS COMMIT PERMISSION

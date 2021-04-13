@@ -3,6 +3,5 @@ export COV_IDIR=/cache/idir/vault
 git clone https://www.github.com/hashicorp/vault
 mkdir vault
 cd vault
-COV_BUILD_BUILD_CMD="make bootstrap"
-time $COV_BUILD_BUILD_CMD
+COV_BUILD_BUILD_CMD="go build -o bin/vault"
 cov-scan

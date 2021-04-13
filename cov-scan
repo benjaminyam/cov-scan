@@ -27,7 +27,7 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
 fi
 
 # Build Command
-if [ -z $COV_BUILD_BUILD_CMD ]; then
+if [ -z "$COV_BUILD_BUILD_CMD" ]; then
 	if [ -f "pom.xml" ]; then
 		mvn -version &>/dev/null && {
 			COV_BUILD_BUILD_CMD="mvn -T $($cpu_cmd) clean compile -DskipTests -Dmaven.test.skip=true"

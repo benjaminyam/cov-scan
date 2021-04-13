@@ -9,7 +9,6 @@ golang-hugo:
   script:
     - 'tests/golang/hugo.sh'
 
-
 golang-consul: 
   image: golang
   stage: test

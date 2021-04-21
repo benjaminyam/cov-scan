@@ -97,9 +97,15 @@ if [ -z "$COV_BUILD_BUILD_CMD" ]; then
 		}
 	fi
 	if [ -f "build.gradle" ] || [ -f "build.gradle.kts" ]; then
-		./gradlew -version && {
-			COV_BUILD_BUILD_CMD="./gradlew clean assembleRelease"
-
+		{
+			{
+				./gradlew -version && 
+				COV_BUILD_BUILD_CMD="./gradlew clean assembleRelease" 
+			} || {
+				./gradle -version &&
+				COV_BUILD_BUILD_CMD="./gradle clean assembleRelease"
+			}
+		} && {
 			cov_android=1
 
 			echo COV_SCAN: [BUILD START] $cov_build_cmd $COV_BUILD_BUILD_CMD

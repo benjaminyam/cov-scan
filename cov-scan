@@ -184,23 +184,4 @@ time cov-analyze --dir $COV_IDIR --strip-path $(pwd) $COV_ANALYZE_FLAGS
 echo COV_SCAN: [ANALYZE END] cov-analyze --dir $COV_IDIR --strip-path $(pwd) $COV_ANALYZE_FLAGS
 
 # Commit Defects
-stream_num=$(cov-manage-im --url $COV_URL --on-new-cert trust --mode streams --name $COV_STREAM --show -no-headers | wc -l) && {
-	if [ $stream_num -eq 0 ]; then
-		echo COV_SCAN: [COMMIT] STREAM DOES NOT EXIST ON CONNECT, CREATING PROJECT/STREAM \($COV_PROJECT/$COV_STREAM\)
-		cov-manage-im --url $COV_URL --on-new-cert trust --mode streams  --add --set name:$COV_STREAM
-		cov-manage-im --url $COV_URL --on-new-cert trust --mode projects --add --set name:$COV_PROJECT || true
-		cov-manage-im --url $COV_URL --on-new-cert trust --mode projects --name $COV_PROJECT --update --insert stream:$COV_STREAM
-	fi
-	
-	echo COV_SCAN: [COMMIT START] cov-commit-defects --dir $COV_IDIR --url $COV_URL --on-new-cert trust --stream $COV_STREAM
-	time cov-commit-defects --dir $COV_IDIR --url $COV_URL --on-new-cert trust --stream $COV_STREAM
-	echo COV_SCAN: [COMMIT END] cov-commit-defects --dir $COV_IDIR --url $COV_URL --on-new-cert trust --stream $COV_STREAM
-} || {
-	curl -kL $COV_URL &>/dev/null  && {
-		echo COV_SCAN: [ERROR] USER AUTHENTICATION/AUTHORIZATION FAILURE, PLEASE ENSURE THAT USERNAME/PASSWORD IS CORRECT AND USER HAS COMMIT PERMISSION
-		exit 1
-	} || {
-		echo COV_SCAN: [ERROR] CANNOT REACH CONNECT, PLEASE ENSURE THAT CONNECT SERVER IS RUNNING
-		exit 1
-	}
-}
+`pwd`/cov-commit

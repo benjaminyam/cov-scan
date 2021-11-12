@@ -147,7 +147,7 @@ echo COV_SCAN: [CAPTURE END] cov-capture --dir $COV_IDIR $COV_CAPTURE_FLAGS
 
 # Analysis Command
 if [ -z "$COV_ANALYZE_FLAGS" ]; then
-	COV_ANALYZE_FLAGS+=" --xx-use-buda-for-cs-and-java-security"
+	# COV_ANALYZE_FLAGS+=" --xx-use-buda-for-cs-and-java-security"
 	
 	if [ $COV_ANALYZE_AUDIT_CHECKERS -eq 1 ]; then
 			COV_ANALYZE_FLAGS+=" --enable-audit-checkers"
